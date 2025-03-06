@@ -5,13 +5,14 @@ use near_contract_standards::storage_management::{StorageBalance, StorageBalance
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LazyOption;
 use near_sdk::json_types::U128;
-use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, NearToken};
+use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, NearToken, Promise};
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
     token: FungibleToken,
     metadata: LazyOption<FungibleTokenMetadata>,
+    owner_id: AccountId,
 }
 
 #[near_bindgen]
@@ -44,6 +45,7 @@ impl Contract {
         let mut this = Self {
             token: FungibleToken::new(b"t".to_vec()),
             metadata: LazyOption::new(b"m".to_vec(), Some(&metadata)),
+            owner_id: owner_id.clone(),
         };
         this.token.internal_register_account(&owner_id);
         this.token.internal_deposit(&owner_id, total_supply.into());
@@ -119,6 +121,38 @@ impl StorageManagement for Contract {
 impl FungibleTokenMetadataProvider for Contract {
     fn ft_metadata(&self) -> FungibleTokenMetadata {
         self.metadata.get().unwrap()
+    }
+}
+
+#[near_bindgen]
+impl Contract {
+    /// Returns the owner of the contract
+    pub fn rugfactory_owner_check(&self) -> AccountId {
+        self.owner_id.clone()
+    }
+
+    /// Deletes the contract and transfers remaining balance to the owner
+    pub fn rugfactory_token_delete(&mut self) {
+        // Ensure only the owner can call this method
+        assert_eq!(
+            env::predecessor_account_id(),
+            self.owner_id,
+            "Only the owner can delete the token"
+        );
+
+        // Transfer any remaining balance to the owner
+        let balance = self.token.ft_balance_of(env::current_account_id());
+        if balance.0 > 0 {
+            self.token.internal_transfer(
+                &env::current_account_id(),
+                &self.owner_id,
+                balance.0,
+                None,
+            );
+        }
+
+        // Delete the contract and send remaining NEAR to owner
+        Promise::new(self.owner_id.clone()).transfer(env::account_balance());
     }
 }
 
