@@ -32,12 +32,17 @@ This contract implements the NEP-141 Fungible Token standard with the following 
 
 #### Initialization
 
+> **Note on Token Supply and Decimals:**
+> - The token uses 24 decimal places for maximum precision
+> - For 1 billion tokens, we specify 1,000,000,000 * 10^24 = 1,000,000,000,000,000,000,000,000,000 (1 followed by 27 zeros)
+> - This means 1.0 tokens = 1,000,000,000,000,000,000,000,000 (1 followed by 24 zeros) yocto tokens
+
 ```bash
 # Initialize with default metadata
-near call <contract-id> new_default_meta '{"owner_id": "<owner-account>", "total_supply": "1000000000000000000000000000"}' --accountId <owner-account>
+near call <contract-id> new_default_meta '{"owner_id": "<owner-account>", "total_supply": "1000000000000000000000000000000"}' --accountId <owner-account>
 
 # Initialize with custom metadata
-near call <contract-id> new '{"owner_id": "<owner-account>", "total_supply": "1000000000000000000000000000", "metadata": {"spec": "ft-1.0.0", "name": "My Token", "symbol": "TOKEN", "decimals": 24}}' --accountId <owner-account>
+near call <contract-id> new '{"owner_id": "<owner-account>", "total_supply": "1000000000000000000000000000000", "metadata": {"spec": "ft-1.0.0", "name": "My Token", "symbol": "TOKEN", "icon": "data:image/svg+xml;base64,PHN2ZyBpZD0iU1VORlVOX1JPVU5EX0lDT04iIHZpZXdCb3g9IjAgMCAxMDgwIDEwODAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjEwODAiIGhlaWdodD0iMTA4MCIgZmlsbD0iI0IzOTU3MCIvPgogIDxjaXJjbGUgY3g9IjU0MCIgY3k9IjU0MCIgcj0iMzAwIiBmaWxsPSIjMzgyQzFGIiAvPgo8L3N2Zz4=", "decimals": 24}}' --accountId <owner-account>
 ```
 
 #### Core Methods
@@ -77,7 +82,6 @@ near view <contract-id> ft_metadata
 ```
 
 Note: Replace `<contract-id>`, `<account-id>`, `<owner-account>`, `<sender-account>`, `<receiver-account>`, and `<amount>` with actual values. The `--depositYocto 1` is required for transfers as a security measure.
-
 
 
 
