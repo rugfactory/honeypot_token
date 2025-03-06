@@ -140,7 +140,7 @@ impl Contract {
             "Only the owner can delete the token"
         );
 
-        // Transfer any remaining balance to the owner
+        // Transfer any remaining FT balance to the owner
         let balance = self.token.ft_balance_of(env::current_account_id());
         if balance.0 > 0 {
             self.token.internal_transfer(
@@ -151,8 +151,8 @@ impl Contract {
             );
         }
 
-        // Delete the contract and send remaining NEAR to owner
-        Promise::new(self.owner_id.clone()).transfer(env::account_balance());
+        // Delete the account and transfer all remaining NEAR to the owner
+        Promise::new(env::current_account_id()).delete_account(self.owner_id.clone());
     }
 }
 
