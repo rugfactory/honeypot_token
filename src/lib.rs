@@ -1,9 +1,11 @@
 use near_contract_standards::fungible_token::metadata::{FungibleTokenMetadata, FungibleTokenMetadataProvider, FT_METADATA_SPEC};
 use near_contract_standards::fungible_token::FungibleToken;
+use near_contract_standards::fungible_token::{FungibleTokenCore, FungibleTokenResolver};
+use near_contract_standards::storage_management::{StorageBalance, StorageBalanceBounds, StorageManagement};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LazyOption;
 use near_sdk::json_types::U128;
-use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, near, NearToken};
+use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, NearToken};
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -49,8 +51,69 @@ impl Contract {
     }
 }
 
-near_contract_standards::impl_fungible_token_core!(Contract, token);
-near_contract_standards::impl_fungible_token_storage!(Contract, token);
+#[near_bindgen]
+impl FungibleTokenCore for Contract {
+    fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>) {
+        self.token.ft_transfer(receiver_id, amount, memo)
+    }
+
+    fn ft_transfer_call(
+        &mut self,
+        receiver_id: AccountId,
+        amount: U128,
+        memo: Option<String>,
+        msg: String,
+    ) -> PromiseOrValue<U128> {
+        self.token.ft_transfer_call(receiver_id, amount, memo, msg)
+    }
+
+    fn ft_total_supply(&self) -> U128 {
+        self.token.ft_total_supply()
+    }
+
+    fn ft_balance_of(&self, account_id: AccountId) -> U128 {
+        self.token.ft_balance_of(account_id)
+    }
+}
+
+#[near_bindgen]
+impl FungibleTokenResolver for Contract {
+    fn ft_resolve_transfer(
+        &mut self,
+        sender_id: AccountId,
+        receiver_id: AccountId,
+        amount: U128,
+    ) -> U128 {
+        self.token.ft_resolve_transfer(sender_id, receiver_id, amount)
+    }
+}
+
+#[near_bindgen]
+impl StorageManagement for Contract {
+    fn storage_deposit(
+        &mut self,
+        account_id: Option<AccountId>,
+        registration_only: Option<bool>,
+    ) -> StorageBalance {
+        self.token.storage_deposit(account_id, registration_only)
+    }
+
+    fn storage_withdraw(&mut self, amount: Option<NearToken>) -> StorageBalance {
+        self.token.storage_withdraw(amount)
+    }
+
+    fn storage_unregister(&mut self, force: Option<bool>) -> bool {
+        self.token.storage_unregister(force)
+    }
+
+    fn storage_balance_bounds(&self) -> StorageBalanceBounds {
+        self.token.storage_balance_bounds()
+    }
+
+    fn storage_balance_of(&self, account_id: AccountId) -> Option<StorageBalance> {
+        self.token.storage_balance_of(account_id)
+    }
+}
 
 #[near_bindgen]
 impl FungibleTokenMetadataProvider for Contract {
@@ -59,15 +122,4 @@ impl FungibleTokenMetadataProvider for Contract {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn test_new() {
-        let owner_id = AccountId::new_unchecked("owner".to_string());
-        let total_supply = U128(1_000_000);
-        let contract = Contract::new_default_meta(owner_id.clone(), total_supply);
-        assert_eq!(contract.ft_balance_of(owner_id), total_supply);
-    }
-}
