@@ -11,8 +11,6 @@ cargo build
 cargo near build
 cargo near build reproducible-wasm
 cargo near abi
-./build_cargo.sh
-./build_reproducible.sh
 
 cargo check
 cargo test
