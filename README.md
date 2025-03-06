@@ -9,6 +9,8 @@ a fungible token for rugfactory with a few extra methods
 ```bash
 cargo build
 cargo near build
+cargo near build reproducible-wasm
+cargo near abi
 ./build_cargo.sh
 ./build_reproducible.sh
 
