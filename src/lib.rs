@@ -7,6 +7,8 @@ use near_sdk::collections::LazyOption;
 use near_sdk::json_types::U128;
 use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, NearToken, Promise};
 
+
+
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
@@ -14,6 +16,12 @@ pub struct Contract {
     metadata: LazyOption<FungibleTokenMetadata>,
     owner_id: AccountId,
 }
+
+
+
+
+
+
 
 #[near_bindgen]
 impl Contract {
@@ -36,6 +44,8 @@ impl Contract {
         )
     }
 
+
+
     /// Initializes the contract with the given total supply owned by the given `owner_id` with
     /// the given metadata.
     #[init]
@@ -52,6 +62,15 @@ impl Contract {
         this
     }
 }
+
+
+
+
+
+
+
+
+/// FungibleTokenCore
 
 #[near_bindgen]
 impl FungibleTokenCore for Contract {
@@ -78,6 +97,11 @@ impl FungibleTokenCore for Contract {
     }
 }
 
+
+
+
+/// FungibleTokenResolver
+
 #[near_bindgen]
 impl FungibleTokenResolver for Contract {
     fn ft_resolve_transfer(
@@ -89,6 +113,12 @@ impl FungibleTokenResolver for Contract {
         self.token.ft_resolve_transfer(sender_id, receiver_id, amount)
     }
 }
+
+
+
+
+/// 📀
+/// StorageManagement
 
 #[near_bindgen]
 impl StorageManagement for Contract {
@@ -117,12 +147,26 @@ impl StorageManagement for Contract {
     }
 }
 
+
+
+
+/// ℹ️
+/// FungibleTokenMetadataProvider
+
 #[near_bindgen]
 impl FungibleTokenMetadataProvider for Contract {
     fn ft_metadata(&self) -> FungibleTokenMetadata {
         self.metadata.get().unwrap()
     }
 }
+
+
+
+
+
+
+// 🏉
+// rugfactory
 
 #[near_bindgen]
 impl Contract {

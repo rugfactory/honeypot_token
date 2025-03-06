@@ -213,6 +213,22 @@
         }
       },
       {
+        "name": "rugfactory_owner_check",
+        "doc": " Returns the owner of the contract",
+        "kind": "view",
+        "result": {
+          "serialization_type": "json",
+          "type_schema": {
+            "$ref": "#/definitions/AccountId"
+          }
+        }
+      },
+      {
+        "name": "rugfactory_token_delete",
+        "doc": " Deletes the contract and transfers remaining balance to the owner",
+        "kind": "call"
+      },
+      {
         "name": "storage_balance_bounds",
         "kind": "view",
         "result": {
