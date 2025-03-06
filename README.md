@@ -38,6 +38,9 @@ This contract implements the NEP-141 Fungible Token standard with the following 
 > - This means 1.0 tokens = 1,000,000,000,000,000,000,000,000 (1 followed by 24 zeros) yocto tokens
 
 ```bash
+
+near deploy <account-id> target/near/fungible_token.wasm
+
 # Initialize with default metadata
 near call <contract-id> new_default_meta '{"owner_id": "<owner-account>", "total_supply": "1000000000000000000000000000000"}' --accountId <owner-account>
 
