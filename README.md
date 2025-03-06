@@ -2,6 +2,9 @@
 
 a fungible token for rugfactory with a few extra methods
 
+rugfactory extra methods
+- rugfactory_token_delete
+
 ---
 
 ## Building and deploying
