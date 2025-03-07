@@ -1,6 +1,6 @@
 [package]
 name = "fungible_token"
-description = "cargo-near-new-project-description"
+description = "a fungible token for rugfactory with a few extra methods"
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/rugfactory/fungible_token"
