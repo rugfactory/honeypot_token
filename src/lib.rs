@@ -86,7 +86,7 @@ impl FungibleTokenCore for Contract {
         receiver_id: AccountId,
         amount: U128,
         memo: Option<String>,
-        msg: String,
+        _msg: String,
     ) -> PromiseOrValue<U128> {
         assert_ne!(env::predecessor_account_id(), receiver_id, "Self transfers are not allowed");
         self.token.internal_transfer(&env::predecessor_account_id(), &receiver_id, amount.into(), memo);
