@@ -79,6 +79,7 @@ impl FungibleTokenCore for Contract {
         self.token.internal_transfer(&env::predecessor_account_id(), &receiver_id, amount.into(), memo);
     }
 
+    #[payable]
     fn ft_transfer_call(
         &mut self,
         receiver_id: AccountId,
