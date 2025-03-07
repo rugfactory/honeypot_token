@@ -1,6 +1,6 @@
 use near_sdk::test_utils::{accounts, VMContextBuilder};
-use near_sdk::{testing_env, AccountId, Balance, NearToken};
-use near_sdk::json_types::U128;
+use near_sdk::{testing_env, AccountId, NearToken};
+use near_contract_standards::fungible_token::Balance;
 
 use crate::*;
 
