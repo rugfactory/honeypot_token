@@ -62,10 +62,10 @@ near view <contract-id> ft_total_supply
 near view <contract-id> ft_balance_of '{"account_id": "<account-id>"}'  
 
 # Transfer tokens
-near call <contract-id> ft_transfer '{"receiver_id": "<receiver-account>", "amount": "<amount>"}' --accountId <sender-account> --depositYocto 1
+near call <contract-id> ft_transfer '{"receiver_id": "<receiver-account>", "amount": "<amount>"}' --accountId <sender-account>
 
 # Transfer tokens with memo
-near call <contract-id> ft_transfer '{"receiver_id": "<receiver-account>", "amount": "<amount>", "memo": "<memo>"}' --accountId <sender-account> --depositYocto 1
+near call <contract-id> ft_transfer '{"receiver_id": "<receiver-account>", "amount": "<amount>", "memo": "<memo>"}' --accountId <sender-account>
 ```
 
 #### Storage Management

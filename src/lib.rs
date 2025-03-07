@@ -75,7 +75,8 @@ impl Contract {
 #[near_bindgen]
 impl FungibleTokenCore for Contract {
     fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>) {
-        self.token.ft_transfer(receiver_id, amount, memo)
+        assert_ne!(env::predecessor_account_id(), receiver_id, "Self transfers are not allowed");
+        self.token.internal_transfer(&env::predecessor_account_id(), &receiver_id, amount.into(), memo);
     }
 
     fn ft_transfer_call(
@@ -85,7 +86,14 @@ impl FungibleTokenCore for Contract {
         memo: Option<String>,
         msg: String,
     ) -> PromiseOrValue<U128> {
-        self.token.ft_transfer_call(receiver_id, amount, memo, msg)
+        assert_ne!(env::predecessor_account_id(), receiver_id, "Self transfers are not allowed");
+        self.token.internal_transfer(&env::predecessor_account_id(), &receiver_id, amount.into(), memo);
+        near_sdk::PromiseOrValue::Value(FungibleToken::ft_resolve_transfer(
+            &mut self.token,
+            env::predecessor_account_id(),
+            receiver_id,
+            amount,
+        ))
     }
 
     fn ft_total_supply(&self) -> U128 {
