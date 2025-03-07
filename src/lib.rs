@@ -122,6 +122,7 @@ impl FungibleTokenResolver for Contract {
 
 #[near_bindgen]
 impl StorageManagement for Contract {
+    #[payable]
     fn storage_deposit(
         &mut self,
         account_id: Option<AccountId>,
