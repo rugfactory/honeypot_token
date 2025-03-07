@@ -5,7 +5,32 @@ use near_contract_standards::storage_management::{StorageBalance, StorageBalance
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LazyOption;
 use near_sdk::json_types::U128;
-use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, NearToken, Promise};
+use near_sdk::serde_json;
+use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, NearToken, Promise, Gas, ext_contract};
+
+const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(10);
+const GAS_FOR_FT_TRANSFER_CALL: Gas = Gas::from_tgas(25);
+const NO_DEPOSIT: NearToken = NearToken::from_yoctonear(0);
+
+#[ext_contract(ext_fungible_receiver)]
+pub trait FungibleTokenReceiver {
+    fn ft_on_transfer(
+        &mut self,
+        sender_id: AccountId,
+        amount: U128,
+        msg: String,
+    ) -> PromiseOrValue<U128>;
+}
+
+#[ext_contract(ext_self)]
+pub trait ExtSelf {
+    fn ft_resolve_transfer(
+        &mut self,
+        sender_id: AccountId,
+        receiver_id: AccountId,
+        amount: U128,
+    ) -> U128;
+}
 
 #[cfg(test)]
 mod test;
@@ -90,12 +115,25 @@ impl FungibleTokenCore for Contract {
     ) -> PromiseOrValue<U128> {
         assert_ne!(env::predecessor_account_id(), receiver_id, "Self transfers are not allowed");
         self.token.internal_transfer(&env::predecessor_account_id(), &receiver_id, amount.into(), memo);
-        near_sdk::PromiseOrValue::Value(FungibleToken::ft_resolve_transfer(
-            &mut self.token,
-            env::predecessor_account_id(),
-            receiver_id,
-            amount,
-        ))
+        
+        // Initiating receiver's call and the callback
+        Promise::new(receiver_id.clone())
+            .function_call(
+                "ft_on_transfer".to_string(),
+                serde_json::to_vec(&(env::predecessor_account_id(), amount, msg)).unwrap(),
+                NO_DEPOSIT,
+                Gas::from_gas(env::prepaid_gas().as_gas() - GAS_FOR_FT_TRANSFER_CALL.as_gas())
+            )
+            .then(
+                Promise::new(env::current_account_id())
+                    .function_call(
+                        "ft_resolve_transfer".to_string(),
+                        serde_json::to_vec(&(env::predecessor_account_id(), receiver_id, amount)).unwrap(),
+                        NO_DEPOSIT,
+                        GAS_FOR_RESOLVE_TRANSFER
+                    )
+            )
+            .into()
     }
 
     fn ft_total_supply(&self) -> U128 {
