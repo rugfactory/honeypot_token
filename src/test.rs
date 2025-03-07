@@ -30,6 +30,16 @@ fn test_transfer() {
     let mut context = get_context(accounts(2));
     testing_env!(context.build());
     let mut contract = Contract::new_default_meta(accounts(2).into(), TOTAL_SUPPLY.into());
+
+    // Register accounts(1) for storage
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_near(1))
+        .predecessor_account_id(accounts(1))
+        .build());
+    contract.storage_deposit(None, None);
+
+    // Perform the transfer
     testing_env!(context
         .storage_usage(env::storage_usage())
         .attached_deposit(NearToken::from_yoctonear(1))
