@@ -70,7 +70,7 @@ fn test_self_transfer_fail() {
 
 #[test]
 fn test_metadata() {
-    let mut context = get_context(accounts(1));
+    let context = get_context(accounts(1));
     testing_env!(context.build());
     let contract = Contract::new_default_meta(accounts(1).into(), TOTAL_SUPPLY.into());
     assert_eq!(contract.ft_metadata().spec, FT_METADATA_SPEC);
@@ -81,7 +81,7 @@ fn test_metadata() {
 
 #[test]
 fn test_rugfactory_owner_check() {
-    let mut context = get_context(accounts(1));
+    let context = get_context(accounts(1));
     testing_env!(context.build());
     let contract = Contract::new_default_meta(accounts(1).into(), TOTAL_SUPPLY.into());
     assert_eq!(contract.rugfactory_owner_check(), accounts(1));
@@ -97,4 +97,91 @@ fn test_rugfactory_token_delete_unauthorized() {
         .predecessor_account_id(accounts(2))
         .build());
     contract.rugfactory_token_delete();
+}
+
+#[test]
+fn test_storage_deposit() {
+    let mut context = get_context(accounts(1));
+    testing_env!(context.build());
+    let mut contract = Contract::new_default_meta(accounts(1).into(), TOTAL_SUPPLY.into());
+
+    // Test storage deposit with minimum amount
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_near(1))
+        .predecessor_account_id(accounts(2))
+        .build());
+    let storage_balance = contract.storage_deposit(None, None);
+    assert!(storage_balance.total.as_yoctonear() > 0);
+    assert_eq!(storage_balance.available.as_yoctonear(), 0);
+
+    // Test storage deposit with registration only
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_near(1))
+        .predecessor_account_id(accounts(3))
+        .build());
+    let storage_balance = contract.storage_deposit(None, Some(true));
+    assert!(storage_balance.total.as_yoctonear() > 0);
+}
+
+#[test]
+fn test_storage_withdraw_and_unregister() {
+    let mut context = get_context(accounts(1));
+    testing_env!(context.build());
+    let mut contract = Contract::new_default_meta(accounts(1).into(), TOTAL_SUPPLY.into());
+
+    // Register account first
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_near(1))
+        .predecessor_account_id(accounts(2))
+        .build());
+    contract.storage_deposit(None, None);
+
+    // Test storage withdraw
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_yoctonear(1))
+        .predecessor_account_id(accounts(2))
+        .build());
+    let storage_balance = contract.storage_withdraw(None);
+    assert_eq!(storage_balance.available.as_yoctonear(), 0);
+
+    // Test storage unregister
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_yoctonear(1))
+        .predecessor_account_id(accounts(2))
+        .build());
+    let storage_balance = contract.storage_unregister(Some(true));
+    assert!(storage_balance);
+}
+
+#[test]
+fn test_ft_transfer_call() {
+    let mut context = get_context(accounts(2));
+    testing_env!(context.build());
+    let mut contract = Contract::new_default_meta(accounts(2).into(), TOTAL_SUPPLY.into());
+
+    // Register receiver account
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_near(1))
+        .predecessor_account_id(accounts(3))
+        .build());
+    contract.storage_deposit(None, None);
+
+    // Perform transfer call
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_yoctonear(1))
+        .predecessor_account_id(accounts(2))
+        .build());
+    let transfer_amount = TOTAL_SUPPLY / 3;
+    contract.ft_transfer_call(accounts(3), transfer_amount.into(), None, "transfer message".to_string());
+
+    // Verify balances after transfer
+    assert_eq!(contract.ft_balance_of(accounts(3)).0, transfer_amount);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY - transfer_amount);
 }

@@ -10,6 +10,7 @@ use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, Nea
 
 const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(10);
 const GAS_FOR_FT_TRANSFER_CALL: Gas = Gas::from_tgas(25);
+const GAS_FOR_FT_ON_TRANSFER: Gas = Gas::from_tgas(35);
 const NO_DEPOSIT: NearToken = NearToken::from_yoctonear(0);
 
 #[ext_contract(ext_fungible_receiver)]
@@ -123,7 +124,7 @@ impl FungibleTokenCore for Contract {
                 "ft_on_transfer".to_string(),
                 serde_json::to_vec(&(env::predecessor_account_id(), amount, msg)).unwrap(),
                 NO_DEPOSIT,
-                Gas::from_gas(env::prepaid_gas().as_gas() - GAS_FOR_FT_TRANSFER_CALL.as_gas())
+                GAS_FOR_FT_ON_TRANSFER
             )
             .then(
                 Promise::new(env::current_account_id())
