@@ -100,6 +100,7 @@ impl Contract {
 
 #[near_bindgen]
 impl FungibleTokenCore for Contract {
+    #[payable]
     fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>) {
         assert_ne!(env::predecessor_account_id(), receiver_id, "Self transfers are not allowed");
         self.token.internal_transfer(&env::predecessor_account_id(), &receiver_id, amount.into(), memo);
