@@ -9,7 +9,6 @@ use near_sdk::serde_json;
 use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, NearToken, Promise, Gas, ext_contract};
 
 const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(10);
-const GAS_FOR_FT_TRANSFER_CALL: Gas = Gas::from_tgas(25);
 const GAS_FOR_FT_ON_TRANSFER: Gas = Gas::from_tgas(35);
 const NO_DEPOSIT: NearToken = NearToken::from_yoctonear(0);
 
