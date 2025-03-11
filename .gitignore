@@ -1,7 +1,7 @@
 # Mac
 .DS_Store
 
-# /target
+/target
 target/cxxbridge
 target/debug
 target/tmp
