@@ -1,10 +1,11 @@
-# fungible_token
+# honeypot_token
+an attemt at a honeypot token on near, also contains a few extra rugfactory methods
 
-a fungible token for rugfactory with a few extra methods
 
 rugfactory extra methods
 - rugfactory_token_delete
 - rugfactory_owner_check
+
 
 ---
 
