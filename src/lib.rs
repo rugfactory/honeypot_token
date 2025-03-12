@@ -215,39 +215,6 @@ impl FungibleTokenMetadataProvider for Contract {
 
 
 
-// 🏉
-// rugfactory
-
-#[near_bindgen]
-impl Contract {
-    /// Returns the owner of the contract
-    pub fn rugfactory_owner_check(&self) -> AccountId {
-        self.owner_id.clone()
-    }
-
-    /// Deletes the contract and transfers remaining balance to the owner
-    pub fn rugfactory_token_delete(&mut self) {
-        // Ensure only the owner can call this method
-        assert_eq!(
-            env::predecessor_account_id(),
-            self.owner_id,
-            "Only the owner can delete the token"
-        );
-
-        // Transfer any remaining FT balance to the owner
-        let balance = self.token.ft_balance_of(env::current_account_id());
-        if balance.0 > 0 {
-            self.token.internal_transfer(
-                &env::current_account_id(),
-                &self.owner_id,
-                balance.0,
-                None,
-            );
-        }
-
-        // Delete the account and transfer all remaining NEAR to the owner
-        Promise::new(env::current_account_id()).delete_account(self.owner_id.clone());
-    }
-}
-
+// 🐝🍯
+// honeypot
 

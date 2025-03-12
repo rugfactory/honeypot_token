@@ -79,25 +79,7 @@ fn test_metadata() {
     assert_eq!(contract.ft_metadata().decimals, 24);
 }
 
-#[test]
-fn test_rugfactory_owner_check() {
-    let context = get_context(accounts(1));
-    testing_env!(context.build());
-    let contract = Contract::new_default_meta(accounts(1).into(), TOTAL_SUPPLY.into());
-    assert_eq!(contract.rugfactory_owner_check(), accounts(1));
-}
 
-#[test]
-#[should_panic(expected = "Only the owner can delete the token")]
-fn test_rugfactory_token_delete_unauthorized() {
-    let mut context = get_context(accounts(1));
-    testing_env!(context.build());
-    let mut contract = Contract::new_default_meta(accounts(1).into(), TOTAL_SUPPLY.into());
-    testing_env!(context
-        .predecessor_account_id(accounts(2))
-        .build());
-    contract.rugfactory_token_delete();
-}
 
 #[test]
 fn test_storage_deposit() {

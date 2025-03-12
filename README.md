@@ -1,10 +1,5 @@
 # honeypot_token
-an attemt at a honeypot token on near, also contains a few extra rugfactory methods
-
-
-rugfactory extra methods
-- rugfactory_token_delete
-- rugfactory_owner_check
+an attemt at a honeypot token on near
 
 
 ---
@@ -96,19 +91,11 @@ Note: Replace `<contract-id>`, `<account-id>`, `<owner-account>`, `<sender-accou
 
 
 
-#### Rugfactory Methods
+#### honeypot methods
 
-This contract includes additional methods specific to rugfactory:
 
-```bash
-# Check the current owner of the contract
-near view <contract-id> rugfactory_owner_check
 
-# Delete the token contract and transfer remaining assets to owner (owner-only method)
-near call <contract-id> rugfactory_token_delete '{}' --accountId <owner-account>
-```
 
-Note: The `rugfactory_token_delete` method can only be called by the contract owner and will permanently delete the contract while transferring any remaining assets to the owner's account.
 
 ---
 
