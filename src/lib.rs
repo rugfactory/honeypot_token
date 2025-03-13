@@ -3,7 +3,7 @@ use near_contract_standards::fungible_token::FungibleToken;
 use near_contract_standards::fungible_token::{FungibleTokenCore, FungibleTokenResolver};
 use near_contract_standards::storage_management::{StorageBalance, StorageBalanceBounds, StorageManagement};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::LazyOption;
+use near_sdk::collections::{LazyOption, LookupSet};
 use near_sdk::json_types::U128;
 use near_sdk::serde_json;
 use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, NearToken, Promise, Gas, ext_contract};
@@ -11,6 +11,18 @@ use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, PromiseOrValue, Nea
 const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(10);
 const GAS_FOR_FT_ON_TRANSFER: Gas = Gas::from_tgas(35);
 const NO_DEPOSIT: NearToken = NearToken::from_yoctonear(0);
+
+
+/// TESTS
+#[cfg(test)]
+mod test;
+
+
+// 🐝🍯
+// honeypot
+
+
+
 
 #[ext_contract(ext_fungible_receiver)]
 pub trait FungibleTokenReceiver {
@@ -32,8 +44,6 @@ pub trait ExtSelf {
     ) -> U128;
 }
 
-#[cfg(test)]
-mod test;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -52,6 +62,38 @@ pub struct Contract {
 
 #[near_bindgen]
 impl Contract {
+    /// Initializes contract with default metadata
+    #[init]
+    pub fn new_default_meta(owner_id: AccountId, total_supply: U128) -> Self {
+        Self::new(
+            owner_id,
+            total_supply,
+            FungibleTokenMetadata {
+                spec: FT_METADATA_SPEC.to_string(),
+                name: "Honeypot Token".to_string(),
+                symbol: "HONEY".to_string(),
+                icon: None,
+                reference: None,
+                reference_hash: None,
+                decimals: 24,
+            },
+        )
+    }
+
+    #[init]
+    pub fn new(owner_id: AccountId, total_supply: U128, metadata: FungibleTokenMetadata) -> Self {
+        assert!(!env::state_exists(), "Already initialized");
+        metadata.assert_valid();
+        let mut this = Self {
+            token: FungibleToken::new(b"t".to_vec()),
+            metadata: LazyOption::new(b"m".to_vec(), Some(&metadata)),
+            owner_id: owner_id.clone(),
+            whitelist: LookupSet::new(b"w".to_vec()),
+        };
+        this.token.internal_register_account(&owner_id);
+        this.token.internal_deposit(&owner_id, total_supply.into());
+        this
+    }
     /// Add account to whitelist (owner only)
     #[payable]
     pub fn add_to_whitelist(&mut self, account_id: AccountId) {
@@ -214,10 +256,4 @@ impl FungibleTokenMetadataProvider for Contract {
 }
 
 
-
-
-
-
-// 🐝🍯
-// honeypot
 
