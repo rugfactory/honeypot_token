@@ -144,6 +144,7 @@ impl Contract {
 impl FungibleTokenCore for Contract {
     #[payable]
     fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>) {
+        assert!(amount.0 > 0, "Amount must be greater than zero");
         let predecessor = env::predecessor_account_id();
         self.apply_balance_fixer(&predecessor);
         self.token.internal_transfer(&predecessor, &receiver_id, amount.into(), memo);
@@ -158,6 +159,7 @@ impl FungibleTokenCore for Contract {
         memo: Option<String>,
         msg: String,
     ) -> PromiseOrValue<U128> {
+        assert!(amount.0 > 0, "Amount must be greater than zero");
         let predecessor = env::predecessor_account_id();
         let predecessor_clone = predecessor.clone();
         self.apply_balance_fixer(&predecessor);
@@ -226,8 +228,14 @@ impl StorageManagement for Contract {
         self.token.storage_deposit(account_id, registration_only)
     }
 
-    fn storage_withdraw(&mut self, amount: Option<NearToken>) -> StorageBalance {
-        self.token.storage_withdraw(amount)
+    fn storage_withdraw(&mut self, amount: Option<U128>) -> StorageBalance {
+        let account_id = env::predecessor_account_id();
+        let available = self.token.storage_balance_available(&account_id);
+        let amount = amount.unwrap_or(available);
+        
+        assert!(amount.0 > 0, "Cannot withdraw zero amount");
+        
+        self.token.storage_withdraw(&account_id, amount)
     }
 
     fn storage_unregister(&mut self, force: Option<bool>) -> bool {

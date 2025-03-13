@@ -131,8 +131,9 @@ fn test_storage_withdraw_and_unregister() {
     
     // First transfer remaining balance back to owner
     let balance = contract.ft_balance_of(accounts(2)).0;
-    contract.ft_transfer(accounts(1), balance.into(), None);
-    
+    if balance > 0 {
+        contract.ft_transfer(accounts(1), balance.into(), None);
+    }
     // Verify balance is zero before storage withdrawal
     assert_eq!(contract.ft_balance_of(accounts(2)).0, 0);
     
@@ -197,7 +198,7 @@ fn test_non_whitelist_transfer() {
     // Attempt transfer without whitelisting
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_near(1))  // Increased deposit
+        .attached_deposit(NearToken::from_near(3))  // Increased deposit to 3 NEAR
         .predecessor_account_id(accounts(2))
         .build());
     contract.storage_deposit(Some(accounts(4)), None);
