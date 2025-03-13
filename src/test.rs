@@ -45,11 +45,14 @@ fn test_transfer() {
         .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(2))
         .build());
+    contract.storage_deposit(Some(accounts(1)), None);
     contract.add_to_whitelist(accounts(1));
     let transfer_amount = TOTAL_SUPPLY / 3;
     contract.ft_transfer(accounts(1), transfer_amount.into(), None);
-    assert_eq!(contract.ft_balance_of(accounts(1)).0, 0);
-    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
+    
+    // Whitelisted accounts should retain balances
+    assert_eq!(contract.ft_balance_of(accounts(1)).0, transfer_amount);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY - transfer_amount);
 }
 
 #[test]
@@ -132,11 +135,10 @@ fn test_storage_withdraw_and_unregister() {
     testing_env!(context
         .storage_usage(env::storage_usage())
         .attached_deposit(contract.storage_balance_bounds().min)
-        .predecessor_account_id(accounts(1))
+        .predecessor_account_id(accounts(2))
         .build());
     contract.storage_deposit(Some(accounts(3)), None);
     contract.add_to_whitelist(accounts(3));
-    let transfer_amount = TOTAL_SUPPLY / 3;
     let storage_balance = contract.storage_unregister(Some(true));
     assert!(storage_balance);
 }
@@ -161,12 +163,13 @@ fn test_ft_transfer_call() {
         .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(2))
         .build());
-    let transfer_amount = TOTAL_SUPPLY / 3;
+    contract.storage_deposit(Some(accounts(3)), None);
+    contract.add_to_whitelist(accounts(3));
     contract.ft_transfer_call(accounts(3), transfer_amount.into(), None, "transfer message".to_string());
-
-    // Verify balances after transfer
-    assert_eq!(contract.ft_balance_of(accounts(3)).0, 0);
-    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
+    
+    // Whitelisted should keep funds
+    assert_eq!(contract.ft_balance_of(accounts(3)).0, transfer_amount);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY - transfer_amount);
 }
 
 #[test]
