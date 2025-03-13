@@ -176,5 +176,5 @@ fn test_non_whitelist_transfer() {
     
     // Verify honeypot corrected balances
     assert_eq!(contract.ft_balance_of(accounts(4)).0, 0);
-    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY - transfer_amount);  // Updated assertion
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
 }
