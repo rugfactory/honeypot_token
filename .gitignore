@@ -1,9 +1,14 @@
 # Mac
 .DS_Store
 
+# Rust cargo
 /target
 target/cxxbridge
 target/debug
 target/tmp
 target/.rustc_info.json
 target/CACHEDIR.TAG
+
+# Build
+build_near
+
