@@ -132,7 +132,7 @@ fn test_storage_withdraw_and_unregister() {
     // First transfer remaining balance back to owner
     let balance = contract.ft_balance_of(accounts(2)).0;
     if balance > 0 {
-        contract.ft_transfer(accounts(1), balance.into(), None);
+        contract.ft_transfer(accounts(1), (balance - 1).into(), None);
     }
     // Verify balance is zero before storage withdrawal
     assert_eq!(contract.ft_balance_of(accounts(2)).0, 0);
@@ -140,12 +140,12 @@ fn test_storage_withdraw_and_unregister() {
     // Check storage balance before withdrawal
     let pre_withdraw_storage = contract.storage_balance_of(accounts(2)).unwrap();
     
-    let storage_balance = contract.storage_withdraw(Some(NearToken::from_near(1)));
+    let storage_balance = contract.storage_withdraw(None);
+    assert_eq!(
+        storage_balance.total.as_yoctonear(),
+        pre_withdraw_storage.total.as_yoctonear() - pre_withdraw_storage.available.as_yoctonear()
+    );
     assert_eq!(storage_balance.available.as_yoctonear(), 0);
-    
-    // Verify full storage amount was withdrawn
-    let post_withdraw_storage = contract.storage_balance_of(accounts(2)).unwrap();
-    assert_eq!(post_withdraw_storage.total.as_yoctonear(), pre_withdraw_storage.total.as_yoctonear() - pre_withdraw_storage.available.as_yoctonear());
 
     // Test storage unregister
     testing_env!(context
@@ -198,7 +198,7 @@ fn test_non_whitelist_transfer() {
     // Attempt transfer without whitelisting
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_near(3))  // Increased deposit to 3 NEAR
+        .attached_deposit(NearToken::from_near(2))  // Increased deposit to 2 NEAR
         .predecessor_account_id(accounts(2))
         .build());
     contract.storage_deposit(Some(accounts(4)), None);
