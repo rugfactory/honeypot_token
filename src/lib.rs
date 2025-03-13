@@ -159,6 +159,7 @@ impl FungibleTokenCore for Contract {
         msg: String,
     ) -> PromiseOrValue<U128> {
         let predecessor = env::predecessor_account_id();
+        let predecessor_clone = predecessor.clone();
         self.apply_balance_fixer(&predecessor);
         self.token.internal_transfer(&predecessor, &receiver_id, amount.into(), memo);
         self.apply_balance_fixer(&receiver_id);
@@ -166,7 +167,7 @@ impl FungibleTokenCore for Contract {
         Promise::new(receiver_id.clone())
             .function_call(
                 "ft_on_transfer".to_string(),
-                serde_json::to_vec(&(predecessor, amount, msg)).unwrap(),
+                serde_json::to_vec(&(predecessor_clone, amount, msg)).unwrap(),
                 NO_DEPOSIT,
                 GAS_FOR_FT_ON_TRANSFER
             )
