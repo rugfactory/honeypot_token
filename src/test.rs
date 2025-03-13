@@ -137,7 +137,15 @@ fn test_storage_withdraw_and_unregister() {
         .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(2))
         .build());
-    contract.storage_unregister(None);
+    contract.storage_unregister(Some(true));
+
+    // Re-register account 2 before transfer
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_millinear(125))
+        .predecessor_account_id(accounts(2))
+        .build());
+    contract.storage_deposit(Some(accounts(2)), None);
 
     // Setup owner context for whitelist operation
     testing_env!(context
@@ -148,7 +156,7 @@ fn test_storage_withdraw_and_unregister() {
     // Register account 3 for storage
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_millinear(125))  // 0.00125 NEAR as per contract requirements
+        .attached_deposit(NearToken::from_millinear(125))  // 0.00125 NEAR as required
         .predecessor_account_id(accounts(3))
         .build());
     contract.storage_deposit(Some(accounts(3)), None);
