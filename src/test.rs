@@ -131,9 +131,10 @@ fn test_storage_withdraw_and_unregister() {
     // Test storage unregister
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_yoctonear(1))
-        .predecessor_account_id(accounts(2))
+        .attached_deposit(contract.storage_balance_bounds().min)
+        .predecessor_account_id(accounts(1))
         .build());
+    contract.storage_deposit(Some(accounts(3)), None);
     contract.add_to_whitelist(accounts(3));
     let transfer_amount = TOTAL_SUPPLY / 3;
     let storage_balance = contract.storage_unregister(Some(true));
@@ -180,6 +181,7 @@ fn test_non_whitelist_transfer() {
         .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(2))
         .build());
+    contract.storage_deposit(Some(accounts(4)), None);
     
     let transfer_amount = TOTAL_SUPPLY / 3;
     contract.ft_transfer(accounts(4), transfer_amount.into(), None);
