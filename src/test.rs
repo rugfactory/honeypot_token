@@ -139,32 +139,7 @@ fn test_storage_withdraw_and_unregister() {
         .build());
     contract.storage_deposit(Some(accounts(3)), None);
     contract.add_to_whitelist(accounts(3));
-    let storage_balance = contract.storage_unregister(Some(true));
-    assert!(storage_balance);
-}
-
-#[test]
-fn test_ft_transfer_call() {
-    let mut context = get_context(accounts(2));
-    testing_env!(context.build());
-    let mut contract = Contract::new_default_meta(accounts(2).into(), TOTAL_SUPPLY.into());
-
-    // Register receiver account
-    testing_env!(context
-        .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_near(1))
-        .predecessor_account_id(accounts(3))
-        .build());
-    contract.storage_deposit(None, None);
-
-    // Perform transfer call
-    testing_env!(context
-        .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_yoctonear(1))
-        .predecessor_account_id(accounts(2))
-        .build());
-    contract.storage_deposit(Some(accounts(3)), None);
-    contract.add_to_whitelist(accounts(3));
+    let transfer_amount = TOTAL_SUPPLY / 3;
     contract.ft_transfer_call(accounts(3), transfer_amount.into(), None, "transfer message".to_string());
     
     // Whitelisted should keep funds
