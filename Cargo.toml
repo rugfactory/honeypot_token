@@ -1,6 +1,6 @@
 [package]
-name = "fungible_token"
-description = "a fungible token for rugfactory with a few extra methods"
+name = "honeypot_token"
+description = "an attemt at a honeypot token on near"
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/rugfactory/fungible_token"
