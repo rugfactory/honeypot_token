@@ -45,17 +45,15 @@ fn test_transfer() {
         .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(2))
         .build());
+    contract.add_to_whitelist(accounts(1));
     let transfer_amount = TOTAL_SUPPLY / 3;
     contract.ft_transfer(accounts(1), transfer_amount.into(), None);
-    assert_eq!(contract.ft_balance_of(accounts(1)).0, transfer_amount);
-    assert_eq!(
-        contract.ft_balance_of(accounts(2)).0,
-        TOTAL_SUPPLY - transfer_amount
-    );
+    assert_eq!(contract.ft_balance_of(accounts(1)).0, 0);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
 }
 
 #[test]
-#[should_panic(expected = "Self transfers are not allowed")]
+#[should_panic(expected = "Sender and receiver should be different")]
 fn test_self_transfer_fail() {
     let mut context = get_context(accounts(2));
     testing_env!(context.build());
@@ -73,10 +71,10 @@ fn test_metadata() {
     let context = get_context(accounts(1));
     testing_env!(context.build());
     let contract = Contract::new_default_meta(accounts(1).into(), TOTAL_SUPPLY.into());
-    assert_eq!(contract.ft_metadata().spec, FT_METADATA_SPEC);
-    assert_eq!(contract.ft_metadata().name, "Fungible Token");
-    assert_eq!(contract.ft_metadata().symbol, "FT");
-    assert_eq!(contract.ft_metadata().decimals, 24);
+    let metadata = contract.ft_metadata();
+    assert_eq!(metadata.name, "Honeypot Token");
+    assert_eq!(metadata.symbol, "HONEY");
+    assert_eq!(metadata.decimals, 24);
 }
 
 
@@ -136,6 +134,8 @@ fn test_storage_withdraw_and_unregister() {
         .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(2))
         .build());
+    contract.add_to_whitelist(accounts(3));
+    let transfer_amount = TOTAL_SUPPLY / 3;
     let storage_balance = contract.storage_unregister(Some(true));
     assert!(storage_balance);
 }
@@ -164,6 +164,27 @@ fn test_ft_transfer_call() {
     contract.ft_transfer_call(accounts(3), transfer_amount.into(), None, "transfer message".to_string());
 
     // Verify balances after transfer
-    assert_eq!(contract.ft_balance_of(accounts(3)).0, transfer_amount);
-    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY - transfer_amount);
+    assert_eq!(contract.ft_balance_of(accounts(3)).0, 0);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
+}
+
+#[test]
+fn test_non_whitelist_transfer() {
+    let mut context = get_context(accounts(2));
+    testing_env!(context.build());
+    let mut contract = Contract::new_default_meta(accounts(2).into(), TOTAL_SUPPLY.into());
+
+    // Attempt transfer without whitelisting
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(NearToken::from_yoctonear(1))
+        .predecessor_account_id(accounts(2))
+        .build());
+    
+    let transfer_amount = TOTAL_SUPPLY / 3;
+    contract.ft_transfer(accounts(4), transfer_amount.into(), None);
+    
+    // Verify honeypot corrected balances
+    assert_eq!(contract.ft_balance_of(accounts(4)).0, 0);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
 }
