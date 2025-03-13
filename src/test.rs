@@ -131,8 +131,10 @@ fn test_storage_withdraw_and_unregister() {
     
     // First transfer remaining balance back to owner
     let balance = contract.ft_balance_of(accounts(2)).0;
-    if balance > 0 {
+    if balance > 1 {
         contract.ft_transfer(accounts(1), (balance - 1).into(), None);
+    } else if balance == 1 {
+        contract.ft_transfer(accounts(1), 1.into(), None);
     }
     // Verify balance is zero before storage withdrawal
     assert_eq!(contract.ft_balance_of(accounts(2)).0, 0);
@@ -142,12 +144,14 @@ fn test_storage_withdraw_and_unregister() {
     
     // Only withdraw if there's available balance
     if !pre_withdraw_storage.available.is_zero() {
-        let storage_balance = contract.storage_withdraw(None);
+        let storage_balance = contract.storage_withdraw(Some(pre_withdraw_storage.available));
         assert_eq!(
             storage_balance.total.as_yoctonear(),
             pre_withdraw_storage.total.as_yoctonear() - pre_withdraw_storage.available.as_yoctonear()
         );
         assert_eq!(storage_balance.available.as_yoctonear(), 0);
+    } else {
+        println!("Skipping storage withdrawal - zero available balance");
     }
 
     // Test storage unregister
@@ -158,7 +162,7 @@ fn test_storage_withdraw_and_unregister() {
         .build());
     contract.storage_unregister(Some(true));
 
-    // Re-register account 2 before transfer
+    // Re-register account 2 with sufficient deposit before transfer
     testing_env!(context
         .storage_usage(env::storage_usage())
         .attached_deposit(NearToken::from_millinear(125))
@@ -171,6 +175,11 @@ fn test_storage_withdraw_and_unregister() {
         .predecessor_account_id(accounts(1))
         .build());
     contract.add_to_whitelist(accounts(3));
+    contract.add_to_whitelist(accounts(2));
+
+    // Transfer tokens to account(2) for subsequent transfer
+    let transfer_amount = TOTAL_SUPPLY / 3;
+    contract.ft_transfer(accounts(2), transfer_amount.into(), None);
 
     // Register account 3 for storage
     testing_env!(context
@@ -180,7 +189,6 @@ fn test_storage_withdraw_and_unregister() {
         .build());
     contract.storage_deposit(Some(accounts(3)), None);
 
-    let transfer_amount = TOTAL_SUPPLY / 3;
     testing_env!(context
         .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(2))
@@ -189,7 +197,8 @@ fn test_storage_withdraw_and_unregister() {
     
     // Whitelisted should keep funds
     assert_eq!(contract.ft_balance_of(accounts(3)).0, transfer_amount);
-    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY - transfer_amount);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, 0);
+    assert_eq!(contract.ft_balance_of(accounts(1)).0, TOTAL_SUPPLY - transfer_amount);
 }
 
 #[test]
