@@ -128,8 +128,23 @@ fn test_storage_withdraw_and_unregister() {
         .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(2))
         .build());
+    
+    // First transfer remaining balance back to owner
+    let balance = contract.ft_balance_of(accounts(2)).0;
+    contract.ft_transfer(accounts(1), balance.into(), None);
+    
+    // Verify balance is zero before storage withdrawal
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, 0);
+    
+    // Check storage balance before withdrawal
+    let pre_withdraw_storage = contract.storage_balance_of(accounts(2)).unwrap();
+    
     let storage_balance = contract.storage_withdraw(None);
     assert_eq!(storage_balance.available.as_yoctonear(), 0);
+    
+    // Verify full storage amount was withdrawn
+    let post_withdraw_storage = contract.storage_balance_of(accounts(2)).unwrap();
+    assert_eq!(post_withdraw_storage.total.as_yoctonear(), pre_withdraw_storage.total.as_yoctonear() - pre_withdraw_storage.available.as_yoctonear());
 
     // Test storage unregister
     testing_env!(context
