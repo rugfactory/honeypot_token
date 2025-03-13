@@ -140,7 +140,7 @@ fn test_storage_withdraw_and_unregister() {
     // Check storage balance before withdrawal
     let pre_withdraw_storage = contract.storage_balance_of(accounts(2)).unwrap();
     
-    let storage_balance = contract.storage_withdraw(None);
+    let storage_balance = contract.storage_withdraw(Some(NearToken::from_near(1)));
     assert_eq!(storage_balance.available.as_yoctonear(), 0);
     
     // Verify full storage amount was withdrawn

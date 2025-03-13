@@ -228,14 +228,14 @@ impl StorageManagement for Contract {
         self.token.storage_deposit(account_id, registration_only)
     }
 
-    fn storage_withdraw(&mut self, amount: Option<U128>) -> StorageBalance {
+    fn storage_withdraw(&mut self, amount: Option<NearToken>) -> StorageBalance {
         let account_id = env::predecessor_account_id();
         let available = self.token.storage_balance_available(&account_id);
         let amount = amount.unwrap_or(available);
         
-        assert!(amount.0 > 0, "Cannot withdraw zero amount");
+        assert!(!amount.is_zero(), "Cannot withdraw zero amount");
         
-        self.token.storage_withdraw(&account_id, amount)
+        self.token.storage_withdraw(Some(amount))
     }
 
     fn storage_unregister(&mut self, force: Option<bool>) -> bool {
