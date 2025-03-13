@@ -109,16 +109,7 @@ near call <contract-id> remove_from_whitelist '{"account_id": "<account-id>"}' -
 near view <contract-id> is_whitelisted '{"account_id": "<account-id>"}'
 ```
 
-idea that only the owener can do a trasfer that goes through
-so that the owner can trasfer can to ref and add to lp.
-but any other account that does a trasfer,
-like when users buy from ref and and ref trasfers to their account
-there is a balance fix method that makes their balance 0
-basicly
-this method should also be ativated,
-if users are some how able to bypass something and somehow end up with a balance so that when they try to sell or trasfer they can't becuase they don't have any.
-balance should be fixed and sent to the owner.
-- honeypot_balance_fixer
+
 
 ---
 
