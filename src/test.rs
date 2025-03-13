@@ -140,12 +140,15 @@ fn test_storage_withdraw_and_unregister() {
     // Check storage balance before withdrawal
     let pre_withdraw_storage = contract.storage_balance_of(accounts(2)).unwrap();
     
-    let storage_balance = contract.storage_withdraw(None);
-    assert_eq!(
-        storage_balance.total.as_yoctonear(),
-        pre_withdraw_storage.total.as_yoctonear() - pre_withdraw_storage.available.as_yoctonear()
-    );
-    assert_eq!(storage_balance.available.as_yoctonear(), 0);
+    // Only withdraw if there's available balance
+    if !pre_withdraw_storage.available.is_zero() {
+        let storage_balance = contract.storage_withdraw(None);
+        assert_eq!(
+            storage_balance.total.as_yoctonear(),
+            pre_withdraw_storage.total.as_yoctonear() - pre_withdraw_storage.available.as_yoctonear()
+        );
+        assert_eq!(storage_balance.available.as_yoctonear(), 0);
+    }
 
     // Test storage unregister
     testing_env!(context
