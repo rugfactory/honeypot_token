@@ -1,6 +1,7 @@
 # honeypot_token
 an attemt at a honeypot token on near
 
+> I have done local tests, not sure this will work, and working on other projects
 
 ---
 
