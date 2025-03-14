@@ -207,18 +207,43 @@ fn test_non_whitelist_transfer() {
     testing_env!(context.build());
     let mut contract = Contract::new_default_meta(accounts(2).into(), TOTAL_SUPPLY.into());
     
-    // Attempt transfer without whitelisting
+    // Register accounts
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_near(2))  // Increased deposit to 2 NEAR
+        .attached_deposit(NearToken::from_near(2))
         .predecessor_account_id(accounts(2))
         .build());
+    contract.storage_deposit(Some(accounts(3)), None);
     contract.storage_deposit(Some(accounts(4)), None);
     
+    // Test regular ft_transfer to non-whitelisted
     let transfer_amount = TOTAL_SUPPLY / 3;
+    contract.ft_transfer(accounts(3), transfer_amount.into(), None);
+    
+    // Verify honeypot corrected balances after regular transfer
+    assert_eq!(contract.ft_balance_of(accounts(3)).0, 0);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
+    
+    // Test ft_transfer_call to non-whitelisted
     contract.ft_transfer_call(accounts(4), transfer_amount.into(), None, "honeypot message".to_string());
     
-    // Verify honeypot corrected balances
+    // Verify honeypot corrected balances after ft_transfer_call
+    assert_eq!(contract.ft_balance_of(accounts(4)).0, 0);
+    assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
+    
+    // Test transfer between two non-whitelisted accounts
+    testing_env!(context
+        .predecessor_account_id(accounts(2))
+        .build());
+    contract.ft_transfer(accounts(3), transfer_amount.into(), None);
+    
+    testing_env!(context
+        .predecessor_account_id(accounts(3))
+        .build());
+    contract.ft_transfer(accounts(4), (transfer_amount/2).into(), None);
+    
+    // Verify all balances are corrected
+    assert_eq!(contract.ft_balance_of(accounts(3)).0, 0);
     assert_eq!(contract.ft_balance_of(accounts(4)).0, 0);
     assert_eq!(contract.ft_balance_of(accounts(2)).0, TOTAL_SUPPLY);
 }
