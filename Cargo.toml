@@ -3,7 +3,7 @@ name = "honeypot_token"
 description = "an attemt at a honeypot token on near"
 version = "0.1.0"
 edition = "2021"
-repository = "https://github.com/rugfactory/fungible_token"
+repository = "https://github.com/rugfactory/honeypot_token"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
